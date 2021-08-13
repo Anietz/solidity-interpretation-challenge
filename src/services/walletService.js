@@ -4,6 +4,7 @@ const Web3 = require("web3");
 const axios = require("axios");
 const maticContract = require("../contracts-abi/matic");
 const abiDecoder = require('abi-decoder');
+const ERC20ABI = require("../contracts-abi/allERC20");
 
 class WalletService {
     provider;
@@ -76,27 +77,71 @@ class WalletService {
         }
      }
 
-    /**
+   /**
+   * Checks a transaction hash for ERC20 tx and decodes the contract data
+   * @param hash transaction hash
+   * @returns
+   */
+  // async decodeTransactionHashEvent(hash){
+  //   try {
+    
+  //     abiDecoder.addABI(maticContract.ABI);
+  //     let receipt = await this.provider.eth.getTransactionReceipt(hash);
+  //     const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
+  //     console.log("decodedLogs",decodedLogs);
+
+
+  //     if (decodedLogs) {
+  //       const decodedTransaction = decodedLogs;
+  //       return decodedTransaction;
+  //     }
+
+  //     throw new Error("No event records found");
+    
+
+  //   } catch (err) {
+  //     console.log(err);
+  //      throw new Error(err);
+  //   }
+  // }
+
+  
+
+ /**
    * Checks a transaction hash for ERC20 tx and decodes the contract data
    * @param hash transaction hash
    * @returns
    */
   async decodeTransactionHashEvent(hash){
     try {
-    
-      abiDecoder.addABI(maticContract.ABI);
       let receipt = await this.provider.eth.getTransactionReceipt(hash);
-      const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
-      console.log("decodedLogs",decodedLogs);
+      const contract1 = new this.provider.eth.Contract(maticContract.ABI,maticContract.contractAddress);
+      const logs = await contract1.getPastEvents("allEvents", {filter: {from:receipt.from},
+        fromBlock:receipt.blockNumber,toBlock:receipt.blockNumber
+    });
 
+    let decodedData = [];
 
-      if (decodedLogs) {
-        const decodedTransaction = decodedLogs;
-        return decodedTransaction;
-      }
+    receipt.logs.forEach(v => {
 
-      throw new Error("No event records found");
-    
+       const eventNameData = this.getEventName([v]);
+       let eventName = null
+       if(eventNameData){
+         eventName = eventNameData['name']
+       }
+
+        const data = {
+          address:v.address,
+          name:eventName, 
+          data:this.provider.utils.hexToNumberString(v.data),
+          topics:v.topics
+        }
+
+        decodedData.push(data);
+        
+    });
+
+      return decodedData;
 
     } catch (err) {
       console.log(err);
@@ -104,8 +149,61 @@ class WalletService {
     }
   }
 
-  decodeLogData(logData){
+  getEventName(log){
+      try {
+    
+        const matic = this.getMaticEventName(log);
+         if(matic) return matic;
 
+        const erc20 = this.getEventNameForERC20(log);
+         if(erc20) return erc20;
+      
+        } catch (err) {
+          console.log(err);
+          throw new Error(err);
+        }
+
+    }
+
+  getEventNameForERC20(log){
+
+    try {
+    
+      abiDecoder.addABI(ERC20ABI);
+      const decodedLogs = abiDecoder.decodeLogs(log);
+    
+      if (decodedLogs) {
+        const decodedTransaction = decodedLogs[0];
+        return decodedTransaction;
+      }
+
+      throw new Error("No event records found");
+  
+    } catch (err) {
+      console.log(err);
+       throw new Error(err);
+    }
+
+
+  }
+
+  getMaticEventName(log){
+    try {
+    
+      abiDecoder.addABI(maticContract.ABI);
+      const decodedLogs = abiDecoder.decodeLogs(log);
+    
+      if (decodedLogs) {
+        const decodedTransaction = decodedLogs[0];
+        return decodedTransaction;
+      }
+
+      throw new Error("No event records found");
+  
+    } catch (err) {
+      console.log(err);
+       throw new Error(err);
+    }
   }
 
 }
