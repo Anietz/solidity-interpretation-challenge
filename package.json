@@ -1,0 +1,31 @@
+{
+  "name": "solidity-interpretation-challenge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Anietz/solidity-interpretation-challenge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Anietz/solidity-interpretation-challenge/issues"
+  },
+  "homepage": "https://github.com/Anietz/solidity-interpretation-challenge#readme",
+  "dependencies": {
+    "abi-decoder": "^2.4.0",
+    "axios": "^0.21.1",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.12.1",
+    "helmet": "^4.6.0",
+    "web3": "^1.5.1"
+  }
+}
